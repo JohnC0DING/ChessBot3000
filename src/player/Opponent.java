@@ -1,4 +1,8 @@
-public class Opponent implements Player{
+package player;
+
+import fenfilemanagement.MoveReader;
+
+public class Opponent implements Player {
 
     private final boolean isWhite;
 

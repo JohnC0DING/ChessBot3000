@@ -1,12 +1,20 @@
-import java.text.AttributedCharacterIterator;
-import java.util.Arrays;
+package board;
+
+import piece.Piece;
+import piece.PieceUtil;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 public class Board {
 
-    private char[] tiles = new char[64];
+    public static final Integer EMPTY_TILE_SCORE = 0; //Surely there is better place for this
+
+    private Optional<Piece>[] tiles = new Optional[64];
+
+    private List<Integer> pieceLocations = new ArrayList<>();
 
     private boolean isCheckMate = false;
 
@@ -30,12 +38,22 @@ public class Board {
             } else if (Character.isDigit(c)) {
                 int numOfBlankSpaces = Character.getNumericValue(c);
                 IntStream.range(tileIndex, tileIndex + numOfBlankSpaces)
-                        .forEach(index -> tiles[index] = ' ');
+                        .forEach(index -> tiles[index] = Optional.empty());
                 tileIndex += numOfBlankSpaces;
             } else {
-                tiles[tileIndex] = c;
+                tiles[tileIndex] = Optional.ofNullable(PieceUtil.getPieceFromCharacter(c));
+                pieceLocations.add(tileIndex);
                 tileIndex++;
             }
         }
     }
+
+    public Optional<Piece>[] getTiles() {
+        return tiles;
+    }
+
+    public List<Integer> getPieceLocations() {
+        return pieceLocations;
+    }
+
 }

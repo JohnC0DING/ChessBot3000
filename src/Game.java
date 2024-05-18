@@ -1,3 +1,9 @@
+import fenfilemanagement.MoveReader;
+import fenfilemanagement.MoveWriter;
+import board.Board;
+import player.Bot;
+import player.Opponent;
+
 public class Game {
 
     private Board board;
@@ -21,16 +27,6 @@ public class Game {
         board.updateBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
         while (!board.isCheckMate()){
-
-            //If is bots move
-                //Move
-                //Update board
-                    //Check for checkmate and check
-                //Update file
-            //Else
-                //Get opponents Move
-                //Update board
-                    //Check for checkmate and check
 
             String fen;
 
