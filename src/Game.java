@@ -24,25 +24,25 @@ public class Game {
     }
 
     public void start() throws InterruptedException {
-        board.updateBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        //board.setupBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", bot.isWhite());
+        board.setupBoard("8/8/7p/7R/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", bot.isWhite());
 
         while (!board.isCheckMate()){
 
             String fen;
 
             if(isBotsTurn) {
-                fen = bot.makeMove();
+                fen = bot.makeMove(board);
                 MoveWriter.writeMove(fen);
                 isBotsTurn = false;
             } else {
-                fen = opponent.makeMove();
+                fen = opponent.makeMove(board);
+                board.updateBoard(fen);
                 if (opponent.isBot()){
                     MoveWriter.writeMove(fen);
                 }
                 isBotsTurn = true;
             }
-
-            board.updateBoard(fen);
 
             System.out.println(MoveReader.getOpponentMove(false));
             MoveWriter.writeMove("TEST");
