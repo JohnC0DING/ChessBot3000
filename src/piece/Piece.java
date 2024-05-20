@@ -1,12 +1,13 @@
 package piece;
 
 import board.Board;
+import util.Pair;
 
 import java.util.Map;
 
 public interface Piece {
 
-    Map<Integer, Integer> getPossibleMoves(int position, Board board);
+    Map<Pair<Integer, Integer>, Integer> getPossibleMoves(int index, Board board);
 
     boolean isFriendly();
 

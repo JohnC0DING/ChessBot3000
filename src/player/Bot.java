@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public class Bot {
 
+    private static final int SEARCH_DEPTH = 2;
+
     private boolean isWhite;
 
     public Bot(boolean isWhite) {
@@ -22,17 +24,22 @@ public class Bot {
         //Evaluate moves
         //Convert to fen
 
-        //Construct first layer of tree
-        //loop through all pieces finding all possible moves for each piece
-
-        //Map of original indexes to Map of new indexes to associated scores
         Map<Integer, Map<Integer, Integer>> originToScoredMoves = new HashMap<>();
 
-        for (Integer index : board.getFriendlyPieceLocations(isWhite)) {
-            board.getTileByIndex(index)
-                    .ifPresent(piece ->
-                            originToScoredMoves.put(index, piece.getPossibleMoves(index, board)));
+        for(int i = 0; i < 2; i++) {
+//            for (Integer index : board.getFriendlyPieceLocations(isWhite)) {
+//                board.getTileByIndex(index)
+//                        .ifPresent(piece ->
+//                                originToScoredMoves.put(index, piece.getPossibleMoves(index, board)));
+//            }
+//            for (Integer index : board.getOpponentPieceLocations(isWhite)) {
+//                board.getTileByIndex(index)
+//                        .ifPresent(piece ->
+//                                originToScoredMoves.put(index, piece.getPossibleMoves(index, board)));
+//            }
         }
+        //Evaluate scores
+
 
         String moveSummary = "22>21";
         board.updateBoard(moveSummary);

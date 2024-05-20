@@ -1,6 +1,7 @@
 package piece;
 
 import board.Board;
+import util.Pair;
 
 import java.util.Map;
 
@@ -17,34 +18,9 @@ public class Pawn implements Piece{
         this.isFriendly = isFriendly;
     }
 
-    //Could continue to use sets here or could use a map of index to piece, might be quicker look up?
     @Override
-    public Map<Integer, Integer> getPossibleMoves(int currentPosition, Board board) {
-//
-//        Set<Integer> possibleMoves = new HashSet<>();
-//        Set<Integer> allPieceLocations = new HashSet<>(opponentPieceLocations);
-//        allPieceLocations.addAll(friendlyPieceLocations);
-//
-//        if(currentPosition / 56 >= 1){
-//            //im a queen now this should never happen
-//            return null;
-//        }
-//
-//        int forwardMove = currentPosition + 8;
-//        if(!allPieceLocations.contains(forwardMove)){
-//            possibleMoves.add(forwardMove);
-//        }
-//        int leftDiagonalTake = currentPosition + 7;
-//        if(opponentPieceLocations.contains(leftDiagonalTake)){
-//            possibleMoves.add(leftDiagonalTake);
-//        }
-//        int rightDiagonalTake = currentPosition + 9;
-//        if(opponentPieceLocations.contains(leftDiagonalTake)){
-//            possibleMoves.add(rightDiagonalTake);
-//        }
-//
-//        return possibleMoves;
-        return null;
+    public Map<Pair<Integer, Integer>, Integer> getPossibleMoves(int index, Board board) {
+        return MoveUtil.getPossibleMovesForPawn(index, board, isWhite);
     }
 
     @Override

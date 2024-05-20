@@ -1,6 +1,7 @@
 package piece;
 
 import board.Board;
+import util.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -32,9 +33,8 @@ public class MoveUtil {
 
     private static final Function<Integer, Integer> MOVE_MODIFIER_DOWN = index -> index - 8;
 
-    public static Map<Integer, Integer> getPossibleMovesForSlidingPiece(int position, Board board, SlidingType type) {
-        Map<Integer, Integer> possibleMoves = new HashMap<>();
-
+    public static Map<Pair<Integer, Integer>, Integer> getPossibleMovesForSlidingPiece(int position, Board board, SlidingType type) {
+        Map<Pair<Integer, Integer>, Integer> possibleMoves = new HashMap<>();
         if (type == SlidingType.STRAIGHT || type == SlidingType.BOTH) {
             possibleMoves.putAll(getPossibleMovesForDirection(position, board, IS_NOT_LAST_COL, MOVE_MODIFIER_RIGHT));
             possibleMoves.putAll(getPossibleMovesForDirection(position, board, IS_NOT_FIRST_COL, MOVE_MODIFIER_LEFT));
@@ -51,27 +51,150 @@ public class MoveUtil {
         return possibleMoves;
     }
 
-    private static Map<Integer, Integer> getPossibleMovesForDirection(int currentIndex, Board board, Predicate<Integer> isNotEndOfSearch, Function<Integer, Integer> moveModifier) {
-        Map<Integer, Integer> possibleMoves = new HashMap<>();
+    public static Map<Pair<Integer, Integer>, Integer> getPossibleMovesForDirection(int currentIndex, Board board, Predicate<Integer> isNotEndOfSearch, Function<Integer, Integer> moveModifier) {
+        Map<Pair<Integer, Integer>, Integer> possibleMoves = new HashMap<>();
 
-        int previousIndex;
-        previousIndex = currentIndex;
-        while (isNotEndOfSearch.test(previousIndex)) {
-            previousIndex = moveModifier.apply(previousIndex);
-            Optional<Piece> maybePiece = board.getTileByIndex(previousIndex);
+        int moveIndex = currentIndex;
+        while (isNotEndOfSearch.test(moveIndex)) {
+            moveIndex = moveModifier.apply(moveIndex);
+            Optional<Piece> maybePiece = board.getTileByIndex(moveIndex);
 
             if (maybePiece.isPresent()) {
                 //Add move if we can take the piece
                 if (!maybePiece.get().isFriendly()) {
-                    possibleMoves.put(previousIndex, maybePiece.get().getScore());
+                    possibleMoves.put(new Pair<>(currentIndex, moveIndex), maybePiece.get().getScore());
                 }
                 //Don't look any further down this line as we are blocked by an opponent or friendly piece.
                 break;
             } else {
-                possibleMoves.put(previousIndex, Board.EMPTY_TILE_SCORE);
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), Board.EMPTY_TILE_SCORE);
             }
         }
 
         return possibleMoves;
+    }
+
+    public static Map<Pair<Integer, Integer>, Integer> getPossibleMovesForKing(int currentIndex, Board board){
+        Map<Pair<Integer, Integer>, Integer> possibleMoves = new HashMap<>();
+
+        if(IS_NOT_FIRST_COL.test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_LEFT.apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+        if(IS_NOT_LAST_COL.test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_RIGHT.apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+        if(IS_NOT_FIRST_ROW.test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_DOWN.apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+        if(IS_NOT_LAST_ROW.test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_UP.apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+        if(IS_NOT_FIRST_COL.and(IS_NOT_FIRST_ROW).test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_LEFT.andThen(MOVE_MODIFIER_DOWN).apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+        if(IS_NOT_FIRST_COL.and(IS_NOT_LAST_ROW).test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_LEFT.andThen(MOVE_MODIFIER_UP).apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+        if(IS_NOT_LAST_COL.and(IS_NOT_FIRST_ROW).test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_DOWN).apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+        if(IS_NOT_LAST_COL.and(IS_NOT_LAST_ROW).test(currentIndex)){
+            int moveIndex = MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_UP).apply(currentIndex);
+            possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+        }
+
+        return possibleMoves;
+    }
+
+    //Could continue to use sets here or could use a map of index to piece, might be quicker look up?
+    public static Map<Pair<Integer, Integer>, Integer> getPossibleMovesForPawn(int currentIndex, Board board, boolean isWhite) {
+
+        Map<Pair<Integer, Integer>, Integer> possibleMoves = new HashMap<>();
+        Function<Integer, Integer> moveModifierForward = isWhite ? MOVE_MODIFIER_UP : MOVE_MODIFIER_DOWN;
+
+        if(currentIndex / 56 >= 1){
+            //im a queen now this should never happen
+            return null;
+        }
+
+        int forwardMove = moveModifierForward.apply(currentIndex);
+        if(board.getTileByIndex(forwardMove).isEmpty()){
+            possibleMoves.put(new Pair<>(currentIndex, forwardMove), Board.EMPTY_TILE_SCORE);
+        }
+        int leftDiagonalTake = MOVE_MODIFIER_LEFT.andThen(moveModifierForward).apply(currentIndex);
+        if(board.getTileByIndex(leftDiagonalTake).isPresent() && board.getTileByIndex(leftDiagonalTake).get().isFriendly()){
+            possibleMoves.put(new Pair<>(currentIndex, leftDiagonalTake), getScoreForMove(board, leftDiagonalTake));
+        }
+        int rightDiagonalTake = MOVE_MODIFIER_RIGHT.andThen(moveModifierForward).apply(currentIndex);
+        if(board.getTileByIndex(rightDiagonalTake).isPresent() && board.getTileByIndex(rightDiagonalTake).get().isFriendly()){
+            possibleMoves.put(new Pair<>(currentIndex, rightDiagonalTake), getScoreForMove(board, rightDiagonalTake));
+        }
+
+        return possibleMoves;
+    }
+
+    public static Map<Pair<Integer, Integer>, Integer> getPossibleMovesForKnight(int currentIndex, Board board){
+        final List<Integer> COL_B = Arrays.asList(1, 9, 17, 25, 33, 41, 49, 57);
+        final List<Integer> COL_G = Arrays.asList(6, 14, 22, 30, 38, 46, 54, 62);
+        final List<Integer> ROW_2 = Arrays.asList(8, 9, 10, 11, 12, 13, 14, 15);
+        final List<Integer> ROW_7 = Arrays.asList(48, 49, 50, 51, 52, 53, 54, 55);
+
+        Map<Pair<Integer, Integer>, Integer> possibleMoves = new HashMap<>();
+
+        if(!COL_B.contains(currentIndex)){
+            if(IS_NOT_LAST_ROW.test(currentIndex)){
+                int moveIndex = currentIndex + 6;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+            if(IS_NOT_FIRST_ROW.test(currentIndex)){
+                int moveIndex = currentIndex - 10;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+
+        }
+        if(!COL_G.contains(currentIndex)){
+            if(IS_NOT_LAST_ROW.test(currentIndex)){
+                int moveIndex = currentIndex + 10;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+            if(IS_NOT_FIRST_ROW.test(currentIndex)){
+                int moveIndex = currentIndex - 6;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+        }
+        if(!ROW_2.contains(currentIndex)){
+            if(IS_NOT_LAST_COL.test(currentIndex)){
+                int moveIndex = currentIndex - 15;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+            if(IS_NOT_FIRST_COL.test(currentIndex)){
+                int moveIndex = currentIndex - 17;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+        }
+        if(!ROW_7.contains(currentIndex)){
+            if(IS_NOT_LAST_COL.test(currentIndex)){
+                int moveIndex = currentIndex + 17;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+            if(IS_NOT_FIRST_COL.test(currentIndex)){
+                int moveIndex = currentIndex + 15;
+                possibleMoves.put(new Pair<>(currentIndex, moveIndex), getScoreForMove(board, moveIndex));
+            }
+        }
+
+        return possibleMoves;
+    }
+
+    private static Integer getScoreForMove(Board board, int moveIndex) {
+        Optional<Piece> maybePiece = board.getTileByIndex(moveIndex);
+        return  maybePiece.map(Piece::getScore).orElse(Board.EMPTY_TILE_SCORE);
     }
 }

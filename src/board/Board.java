@@ -43,7 +43,7 @@ public class Board {
                         .forEach(index -> tiles[index] = Optional.empty());
                 tileIndex += numOfBlankSpaces;
             } else {
-                Piece piece = PieceUtil.createPieceFromCharacter(c, isBotWhite))
+                Piece piece = PieceUtil.createPieceFromCharacter(c, isBotWhite);
                 tiles[tileIndex] = Optional.of(piece);
 
                 cacheLocation(tileIndex, piece.isWhite());
@@ -66,6 +66,10 @@ public class Board {
         return isWhite ? whitePieceLocations : blackPieceLocations;
     }
 
+    public Set<Integer> getOpponentPieceLocations(boolean isWhite){
+        return !isWhite ? whitePieceLocations : blackPieceLocations;
+    }
+
     public void updateBoard(String moveSummary){
         String[] moveParts = moveSummary.split(">");
         String from = moveParts[0];
@@ -86,6 +90,14 @@ public class Board {
 
     public List<Integer> getPieceLocations() {
         return pieceLocations;
+    }
+
+    public Set<Integer> getWhitePieceLocations() {
+        return whitePieceLocations;
+    }
+
+    public Set<Integer> getBlackPieceLocations() {
+        return blackPieceLocations;
     }
 
 }

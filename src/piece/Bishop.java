@@ -1,6 +1,7 @@
 package piece;
 
 import board.Board;
+import util.Pair;
 
 import java.util.Map;
 
@@ -16,8 +17,8 @@ public class Bishop implements Piece {
     }
 
     @Override
-    public Map<Integer, Integer> getPossibleMoves(int position, Board board) {
-        return MoveUtil.getPossibleMovesForSlidingPiece(position, board, SlidingType.DIAGONAL);
+    public Map<Pair<Integer, Integer>, Integer> getPossibleMoves(int index, Board board) {
+        return MoveUtil.getPossibleMovesForSlidingPiece(index, board, SlidingType.DIAGONAL);
     }
 
     @Override
