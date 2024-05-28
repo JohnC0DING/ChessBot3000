@@ -1,7 +1,9 @@
 package board;
 
+import movement.Move;
 import piece.Piece;
 import piece.PieceUtil;
+import util.Pair;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -20,12 +22,12 @@ public class Board {
 
     private boolean isCheckMate = false;
 
-    public boolean isCheckMate() {
-        return isCheckMate;
-    }
-
-    public void setCheckMate(boolean checkMate) {
-        isCheckMate = checkMate;
+    public Board(Board board){
+        tiles = board.getTiles();
+        pieceLocations = board.getPieceLocations();
+        whitePieceLocations = board.getWhitePieceLocations();
+        blackPieceLocations = board.getBlackPieceLocations();
+        isCheckMate = board.isCheckMate();
     }
 
     public void setupBoard(String fen, boolean isBotWhite){
@@ -70,17 +72,28 @@ public class Board {
         return !isWhite ? whitePieceLocations : blackPieceLocations;
     }
 
-    public void updateBoard(String moveSummary){
-        String[] moveParts = moveSummary.split(">");
-        String from = moveParts[0];
-        String to = moveParts[1];
+    public void updateBoard(Move move){
+        Optional<Piece> piece = tiles[move.getMove().left()];
+        tiles[move.getMove().left()] = Optional.empty();
+        tiles[move.getMove().right()] = piece;
 
-        Optional<Piece> piece = tiles[Integer.parseInt(from)];
-        tiles[Integer.parseInt(from)] = Optional.empty();
-        tiles[Integer.parseInt(to)] = piece;
+        if(move.getCastleMove().isPresent()){
+            Pair<Integer, Integer> castleMove = move.getCastleMove().get();
+            piece = tiles[castleMove.left()];
+            tiles[castleMove.left()] = Optional.empty();
+            tiles[castleMove.right()] = piece;
+        }
     }
 
-    public Optional<Piece> getTileByIndex(int index) {
+    /**
+     * Only ever call when you are certain there is something on this tile
+     */
+    public Piece getPieceByIndex(int index) {
+        Optional<Piece> piece = tiles[index];
+        return piece.orElseThrow();
+    }
+
+    public Optional<Piece> findPieceByIndex(int index) {
         return tiles[index];
     }
 
@@ -98,6 +111,15 @@ public class Board {
 
     public Set<Integer> getBlackPieceLocations() {
         return blackPieceLocations;
+    }
+
+
+    public boolean isCheckMate() {
+        return isCheckMate;
+    }
+
+    public void setCheckMate(boolean checkMate) {
+        isCheckMate = checkMate;
     }
 
 }

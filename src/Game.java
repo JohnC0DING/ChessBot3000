@@ -1,8 +1,10 @@
 import fenfilemanagement.MoveReader;
 import fenfilemanagement.MoveWriter;
 import board.Board;
+import movement.Move;
 import player.Bot;
 import player.Opponent;
+import util.Pair;
 
 public class Game {
 
@@ -29,17 +31,17 @@ public class Game {
 
         while (!board.isCheckMate()){
 
-            String fen;
+            Pair<String, Move> fenToMove;
 
             if(isBotsTurn) {
-                fen = bot.makeMove(board);
-                MoveWriter.writeMove(fen);
+                fenToMove = bot.makeMove(board);
+                MoveWriter.writeMove(fenToMove.left());
                 isBotsTurn = false;
             } else {
-                fen = opponent.makeMove(board);
-                board.updateBoard(fen);
+                fenToMove = opponent.makeMove(board);
+                board.updateBoard(fenToMove.right());
                 if (opponent.isBot()){
-                    MoveWriter.writeMove(fen);
+                    MoveWriter.writeMove(fenToMove.left());
                 }
                 isBotsTurn = true;
             }

@@ -1,16 +1,14 @@
 package player;
 
 import board.Board;
-import piece.Piece;
-import piece.Rook;
+import movement.Move;
+import util.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class Bot {
 
-    private static final int SEARCH_DEPTH = 2;
 
     private boolean isWhite;
 
@@ -18,25 +16,30 @@ public class Bot {
         this.isWhite = isWhite;
     }
 
-    public String makeMove(Board board) {
+    public Pair<String, Move> makeMove(Board board) {
         //Construct tree of possible moves
         //for now create one level of the tree then pick at random
         //Evaluate moves
         //Convert to fen
 
-        Map<Integer, Map<Integer, Integer>> originToScoredMoves = new HashMap<>();
+        Map<Pair<Integer, Integer>, Integer>  movesToScores = new HashMap<>();
 
+        boolean isBotMove = true;
         for(int i = 0; i < 2; i++) {
-//            for (Integer index : board.getFriendlyPieceLocations(isWhite)) {
-//                board.getTileByIndex(index)
-//                        .ifPresent(piece ->
-//                                originToScoredMoves.put(index, piece.getPossibleMoves(index, board)));
-//            }
-//            for (Integer index : board.getOpponentPieceLocations(isWhite)) {
-//                board.getTileByIndex(index)
-//                        .ifPresent(piece ->
-//                                originToScoredMoves.put(index, piece.getPossibleMoves(index, board)));
-//            }
+            if(isBotMove){
+                for (Integer index : board.getFriendlyPieceLocations(isWhite)) {
+                    board.getPieceByIndex(index)
+                            .ifPresent(piece ->
+                                    movesToScores.putAll(piece.getPossibleMoves(index, board)));
+                }
+            } else {
+                    for (Integer index : board.getOpponentPieceLocations(isWhite)) {
+                        board.getPieceByIndex(index)
+                                .ifPresent(piece ->
+                                        movesToScores.putAll(piece.getPossibleMoves(index, board)));
+                    }
+            }
+            isBotMove = !isBotMove;
         }
         //Evaluate scores
 

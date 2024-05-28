@@ -1,4 +1,5 @@
 package util;
 
-public record Pair<K, V>(K key, V value) {
+public record Pair<K, V>(K left, V right) {
+
 }
