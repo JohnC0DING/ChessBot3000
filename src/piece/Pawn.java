@@ -15,13 +15,13 @@ public class Pawn extends Piece {
     }
 
     @Override
-    public List<Pair<Integer, Move>> getPossibleMoves(int index, Board board) {
-        return PieceMoveUtil.getPossibleMovesForPawn(index, board, isWhite);
+    public List<Move> getPossibleMoves(int index, Board board) {
+        return PieceMoveUtil.getPossibleMovesForPawn(index, board, super.isWhite());
     }
 
     @Override
-    public boolean isFriendly() {
-        return false;
+    public boolean canSeeOpponentPiece(int currentIndex, int opponentIndex, Board board) {
+        return PieceMoveUtil.canSeeIndexForPawn(currentIndex, currentIndex, board, super.isWhite());
     }
 
     @Override
@@ -30,7 +30,10 @@ public class Pawn extends Piece {
     }
 
     @Override
-    public boolean isWhite() {
-        return isWhite;
+    public Pieces getCharacterRepresentation(){
+        if(isWhite()){
+            return Pieces.P;
+        }
+        return Pieces.p;
     }
 }

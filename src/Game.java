@@ -2,9 +2,10 @@ import fenfilemanagement.MoveReader;
 import fenfilemanagement.MoveWriter;
 import board.Board;
 import movement.Move;
+import movement.MoveTreeService;
 import player.Bot;
 import player.Opponent;
-import util.Pair;
+import player.Player;
 
 public class Game {
 
@@ -18,31 +19,31 @@ public class Game {
 
     private boolean winner;
 
+    private MoveTreeService moveTreeService;
+
     public Game(boolean isBotWhite, boolean isSinglePlayer) {
-        this.board =  new Board();
-        this.bot = new Bot(isBotWhite);
+        this.board = new Board();
+        this.moveTreeService = new MoveTreeService();
+        this.bot = new Bot(isBotWhite, moveTreeService);
         this.isBotsTurn = isBotWhite;
-        this.opponent = new Opponent(!isBotWhite,isSinglePlayer);
+        this.opponent = new Opponent(!isBotWhite, isSinglePlayer);
     }
 
-    public void start() throws InterruptedException {
-        //board.setupBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", bot.isWhite());
-        board.setupBoard("8/8/7p/7R/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", bot.isWhite());
+    public void runGame() throws InterruptedException {
+        board.setupBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", bot.isWhite());
+        //board.setupBoard("8/8/7p/7R/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", bot.isWhite());
 
-        while (!board.isCheckMate()){
+        while (!board.isCheckMate()) {
 
-            Pair<String, Move> fenToMove;
+            Move move;
 
-            if(isBotsTurn) {
-                fenToMove = bot.makeMove(board);
-                MoveWriter.writeMove(fenToMove.left());
+            if (isBotsTurn) {
+                move = bot.resolveMove(board);
+                postMoveProcessing(bot, move);
                 isBotsTurn = false;
             } else {
-                fenToMove = opponent.makeMove(board);
-                board.updateBoard(fenToMove.right());
-                if (opponent.isBot()){
-                    MoveWriter.writeMove(fenToMove.left());
-                }
+                move = opponent.resolveMove(board);
+                postMoveProcessing(bot, move);
                 isBotsTurn = true;
             }
 
@@ -51,10 +52,19 @@ public class Game {
             System.out.println("White wins");
         }
 
-        if(winner){
+        if (winner) {
             System.out.println("You win");
         } else {
             System.out.println("Aaahhhhh ur out");
+        }
+    }
+
+    private void postMoveProcessing(Player player, Move move) {
+        board.updateBoard(move, player.isWhite());
+
+        if (player.isBot()) {
+            String fen = board.convertBoardToFen(isBotsTurn);
+            MoveWriter.writeMove(fen);
         }
     }
 

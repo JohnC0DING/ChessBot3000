@@ -16,13 +16,13 @@ public enum Pieces {
     n {
         @Override
         public Piece instantiate(boolean isBotWhite) {
-            return null;
+            return new Knight(false, !isBotWhite);
         }
     },
     N {
         @Override
         public Piece instantiate(boolean isBotWhite) {
-            return null;
+            return new Knight(true, !isBotWhite);
         }
     },
     b {
@@ -64,13 +64,13 @@ public enum Pieces {
     k {
         @Override
         public Piece instantiate(boolean isBotWhite) {
-            return null;
+            return new King(false, !isBotWhite);
         }
     },
     K {
         @Override
         public Piece instantiate(boolean isBotWhite) {
-            return null;
+            return new King(true, !isBotWhite);
         }
     };
 

@@ -3,7 +3,6 @@ package movement;
 import board.Board;
 import piece.Piece;
 import piece.SlidingType;
-import util.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -43,8 +42,8 @@ public class PieceMoveUtil {
 
     private static final Function<Integer, Integer> MOVE_MODIFIER_DOWN = index -> index - 8;
 
-    public static List<Pair<Integer, Move>> getPossibleMovesForSlidingPiece(int position, Board board, SlidingType type) {
-        List<Pair<Integer, Move>> possibleMoves = new ArrayList<>();
+    public static List<Move> getPossibleMovesForSlidingPiece(int position, Board board, SlidingType type) {
+        List<Move> possibleMoves = new ArrayList<>();
         if (type == SlidingType.STRAIGHT || type == SlidingType.BOTH) {
             possibleMoves.addAll(getPossibleMovesForDirection(position, board, IS_NOT_LAST_COL, MOVE_MODIFIER_RIGHT));
             possibleMoves.addAll(getPossibleMovesForDirection(position, board, IS_NOT_FIRST_COL, MOVE_MODIFIER_LEFT));
@@ -61,7 +60,7 @@ public class PieceMoveUtil {
         return possibleMoves;
     }
 
-    public static boolean canSeeIndexForSlidingPiece(int index, Board board, SlidingType type, int indexToFind) {
+    public static boolean canSeeIndexForSlidingPiece(int index, int indexToFind, Board board, SlidingType type) {
         if (type == SlidingType.STRAIGHT || type == SlidingType.BOTH) {
             if (canSeeIndexInDirection(index, indexToFind, board, IS_NOT_LAST_COL, MOVE_MODIFIER_RIGHT) ||
                     canSeeIndexInDirection(index, indexToFind, board, IS_NOT_FIRST_COL, MOVE_MODIFIER_LEFT) ||
@@ -96,8 +95,8 @@ public class PieceMoveUtil {
         return false;
     }
 
-    public static List<Pair<Integer, Move>> getPossibleMovesForDirection(int currentIndex, Board board, Predicate<Integer> isNotEndOfSearch, Function<Integer, Integer> moveModifier) {
-        List<Pair<Integer, Move>> possibleMoves = new ArrayList<>();
+    public static List<Move> getPossibleMovesForDirection(int currentIndex, Board board, Predicate<Integer> isNotEndOfSearch, Function<Integer, Integer> moveModifier) {
+        List<Move> possibleMoves = new ArrayList<>();
 
         int moveIndex = currentIndex;
         while (isNotEndOfSearch.test(moveIndex)) {
@@ -106,60 +105,60 @@ public class PieceMoveUtil {
 
             if (maybePiece.isPresent()) {
                 //Add move if we can take the piece
-                if (!maybePiece.get().isFriendly()) {
-                    possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                if (maybePiece.get().isOpponent()) {
+                    possibleMoves.add(new Move(currentIndex, moveIndex));
                 }
                 //Don't look any further down this line as we are blocked by an opponent or friendly piece.
                 break;
             } else {
-                possibleMoves.add(new Pair<>(Board.EMPTY_TILE_SCORE, new Move(currentIndex, moveIndex)));
+                possibleMoves.add(new Move(currentIndex, moveIndex));
             }
         }
 
         return possibleMoves;
     }
 
-    public static List<Pair<Integer, Move>> getPossibleMovesForKing(int currentIndex, Board board) {
-        List<Pair<Integer, Move>> possibleMoves = new ArrayList<>();
+    public static List<Move> getPossibleMovesForKing(int currentIndex, Board board) {
+        List<Move> possibleMoves = new ArrayList<>();
 
         if (IS_NOT_FIRST_COL.test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_LEFT.apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
         if (IS_NOT_LAST_COL.test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_RIGHT.apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
         if (IS_NOT_FIRST_ROW.test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_DOWN.apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
         if (IS_NOT_LAST_ROW.test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_UP.apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
         if (IS_NOT_FIRST_COL.and(IS_NOT_FIRST_ROW).test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_LEFT.andThen(MOVE_MODIFIER_DOWN).apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
         if (IS_NOT_FIRST_COL.and(IS_NOT_LAST_ROW).test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_LEFT.andThen(MOVE_MODIFIER_UP).apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
         if (IS_NOT_LAST_COL.and(IS_NOT_FIRST_ROW).test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_DOWN).apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
         if (IS_NOT_LAST_COL.and(IS_NOT_LAST_ROW).test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_UP).apply(currentIndex);
-            possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+            addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
 
         return possibleMoves;
     }
 
     public static boolean canSeeIndexForKing(int currentIndex, int indexToFind, Board board) {
-        List<Pair<Integer, Move>> possibleMoves = new ArrayList<>();
+        List<Move> possibleMoves = new ArrayList<>();
 
         if (IS_NOT_FIRST_COL.test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_LEFT.apply(currentIndex);
@@ -212,74 +211,89 @@ public class PieceMoveUtil {
     }
 
     //Could continue to use sets here or could use a map of index to piece, might be quicker look up?
-    public static List<Pair<Integer, Move>> getPossibleMovesForPawn(int currentIndex, Board board, boolean isWhite) {
+    public static List<Move> getPossibleMovesForPawn(int currentIndex, Board board, boolean isWhite) {
 
-        List<Pair<Integer, Move>> possibleMoves = new ArrayList<>();
-        Function<Integer, Integer> moveModifierForward = isWhite ? MOVE_MODIFIER_UP : MOVE_MODIFIER_DOWN;
-        List<Integer> startingRow = isWhite ? ROW_2 : ROW_7;
+        List<Move> possibleMoves = new ArrayList<>();
+        Function<Integer, Integer> moveModifierForward;
+        List<Integer> startingRow;
+        List<Integer> endRow;
 
-        if (currentIndex / 56 >= 1) {
-            //im a queen now this should never happen
-            return null;
+        if (isWhite) {
+            moveModifierForward = MOVE_MODIFIER_DOWN;
+            startingRow = ROW_7;
+            endRow = ROW_1;
+        } else {
+            moveModifierForward = MOVE_MODIFIER_UP;
+            startingRow = ROW_2;
+            endRow = ROW_8;
+        }
+
+        if (endRow.contains(currentIndex)) {
+            throw new RuntimeException("im a queen now this should never happen");
         }
 
         int forwardMove = moveModifierForward.apply(currentIndex);
         if (board.findPieceByIndex(forwardMove).isEmpty()) {
-            possibleMoves.add(new Pair<>(Board.EMPTY_TILE_SCORE, new Move(currentIndex, forwardMove)));
-        }
-        int leftDiagonalTake = MOVE_MODIFIER_LEFT.andThen(moveModifierForward).apply(currentIndex);
-        if (board.findPieceByIndex(leftDiagonalTake).isPresent() && board.findPieceByIndex(leftDiagonalTake).get().isFriendly()) {
-            possibleMoves.add(new Pair<>(getScoreForMove(board, leftDiagonalTake), new Move(currentIndex, leftDiagonalTake)));
-        }
-        int rightDiagonalTake = MOVE_MODIFIER_RIGHT.andThen(moveModifierForward).apply(currentIndex);
-        if (board.findPieceByIndex(rightDiagonalTake).isPresent() && board.findPieceByIndex(rightDiagonalTake).get().isFriendly()) {
-            possibleMoves.add(new Pair<>(getScoreForMove(board, rightDiagonalTake), new Move(currentIndex, rightDiagonalTake)));
+            possibleMoves.add(new Move(currentIndex, forwardMove));
         }
 
         //Starting tile double move
         if (startingRow.contains(currentIndex)) {
             int doubleForwardMove = moveModifierForward.apply(forwardMove);
             if (board.findPieceByIndex(doubleForwardMove).isEmpty()) {
-                possibleMoves.add(new Pair<>(Board.EMPTY_TILE_SCORE, new Move(currentIndex, doubleForwardMove)));
+                possibleMoves.add(new Move(currentIndex, doubleForwardMove));
             }
         }
 
+        if (!COL_A.contains(currentIndex)) {
+            int leftDiagonalTake = MOVE_MODIFIER_LEFT.andThen(moveModifierForward).apply(currentIndex);
+            addMoveIfEmptyOrOpponent(currentIndex, board, leftDiagonalTake, possibleMoves);
+        }
+        if (!COL_H.contains(currentIndex)) {
+            int rightDiagonalTake = MOVE_MODIFIER_RIGHT.andThen(moveModifierForward).apply(currentIndex);
+            addMoveIfEmptyOrOpponent(currentIndex, board, rightDiagonalTake, possibleMoves);
+        }
+
         return possibleMoves;
+    }
+
+    //TODO need to check if we are in check by moving this piece, could do this here or tie it with the scoring as we are already checking all positions there.
+    // Then remove the node from the tree if we are moving into check. Although this may be bad if we are working from the bottom up. As we may be checking all
+    // the nodes below first. Something to look into.
+    private static void addMoveIfEmptyOrOpponent(int currentIndex, Board board, int moveIndex, List<Move> possibleMoves) {
+        if (board.findPieceByIndex(moveIndex).isPresent() && board.findPieceByIndex(moveIndex).get().isOpponent()) {
+            possibleMoves.add(new Move(currentIndex, moveIndex));
+        }
     }
 
 
     //Could continue to use sets here or could use a map of index to piece, might be quicker look up?
     public static boolean canSeeIndexForPawn(int currentIndex, int indexToFind, Board board, boolean isWhite) {
 
-        Function<Integer, Integer> moveModifierForward = isWhite ? MOVE_MODIFIER_UP : MOVE_MODIFIER_DOWN;
-        List<Integer> startingRow = isWhite ? Arrays.asList(8, 9, 10, 11, 12, 13, 14, 15) : Arrays.asList(48, 49, 50, 51, 52, 53, 54, 55);
+        Function<Integer, Integer> moveModifierForward;
+        List<Integer> endRow;
 
-        if (currentIndex / 56 >= 1) {
-            //im a queen now this should never happen
-            return false;
+        if (isWhite) {
+            moveModifierForward = MOVE_MODIFIER_DOWN;
+            endRow = ROW_1;
+        } else {
+            moveModifierForward = MOVE_MODIFIER_UP;
+            endRow = ROW_8;
         }
 
-        int forwardMove = moveModifierForward.apply(currentIndex);
-        if (board.findPieceByIndex(forwardMove).isEmpty()) {
-            if (forwardMove == indexToFind) {
+        if (endRow.contains(currentIndex)) {
+            throw new RuntimeException("im a queen now this should never happen");
+        }
+
+        if (!COL_A.contains(currentIndex)) {
+            int leftDiagonalTake = MOVE_MODIFIER_LEFT.andThen(moveModifierForward).apply(currentIndex);
+            if (leftDiagonalTake == indexToFind) {
                 return true;
             }
         }
-        int leftDiagonalTake = MOVE_MODIFIER_LEFT.andThen(moveModifierForward).apply(currentIndex);
-        if (board.findPieceByIndex(leftDiagonalTake).isPresent() && board.findPieceByIndex(leftDiagonalTake).get().isFriendly()) {
-            if (leftDiagonalTake == indexToFind) {
-                return true;
-            }        }
-        int rightDiagonalTake = MOVE_MODIFIER_RIGHT.andThen(moveModifierForward).apply(currentIndex);
-        if (board.findPieceByIndex(rightDiagonalTake).isPresent() && board.findPieceByIndex(rightDiagonalTake).get().isFriendly()) {
-            if (rightDiagonalTake == indexToFind) {
-                return true;
-            }        }
-
-        //Starting tile double move
-        if (startingRow.contains(currentIndex)) {
-            int doubleForwardMove = moveModifierForward.apply(forwardMove);
-            return board.findPieceByIndex(doubleForwardMove).isEmpty() && doubleForwardMove == indexToFind;
+        if (!COL_H.contains(currentIndex)) {
+            int rightDiagonalTake = MOVE_MODIFIER_RIGHT.andThen(moveModifierForward).apply(currentIndex);
+            return rightDiagonalTake == indexToFind;
         }
 
         return false;
@@ -292,12 +306,14 @@ public class PieceMoveUtil {
                 int moveIndex = currentIndex + 6;
                 if (moveIndex == indexToFind) {
                     return true;
-                }            }
+                }
+            }
             if (IS_NOT_FIRST_ROW.test(currentIndex)) {
                 int moveIndex = currentIndex - 10;
                 if (moveIndex == indexToFind) {
                     return true;
-                }            }
+                }
+            }
 
         }
         if (!COL_G.contains(currentIndex)) {
@@ -305,7 +321,8 @@ public class PieceMoveUtil {
                 int moveIndex = currentIndex + 10;
                 if (moveIndex == indexToFind) {
                     return true;
-                }            }
+                }
+            }
             if (IS_NOT_FIRST_ROW.test(currentIndex)) {
                 int moveIndex = currentIndex - 6;
                 if (moveIndex == indexToFind) {
@@ -336,85 +353,58 @@ public class PieceMoveUtil {
             }
             if (IS_NOT_FIRST_COL.test(currentIndex)) {
                 int moveIndex = currentIndex + 15;
-                if (moveIndex == indexToFind) {
-                    return true;
-                }
+                return moveIndex == indexToFind;
             }
         }
 
         return false;
     }
 
-    public static List<Pair<Integer, Move>> getPossibleMovesForKnight(int currentIndex, Board board) {
+    public static List<Move> getPossibleMovesForKnight(int currentIndex, Board board) {
 
-        List<Pair<Integer, Move>> possibleMoves = new ArrayList<>();
+        List<Move> possibleMoves = new ArrayList<>();
 
-        if (!COL_B.contains(currentIndex)) {
+        if (!COL_B.contains(currentIndex) && !COL_A.contains(currentIndex)) {
             if (IS_NOT_LAST_ROW.test(currentIndex)) {
                 int moveIndex = currentIndex + 6;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
             if (IS_NOT_FIRST_ROW.test(currentIndex)) {
                 int moveIndex = currentIndex - 10;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
-
         }
-        if (!COL_G.contains(currentIndex)) {
+        if (!COL_G.contains(currentIndex) && !COL_H.contains(currentIndex)) {
             if (IS_NOT_LAST_ROW.test(currentIndex)) {
                 int moveIndex = currentIndex + 10;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
             if (IS_NOT_FIRST_ROW.test(currentIndex)) {
                 int moveIndex = currentIndex - 6;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
         }
-        if (!ROW_2.contains(currentIndex)) {
+        if (!ROW_2.contains(currentIndex) && !ROW_1.contains(currentIndex)) {
             if (IS_NOT_LAST_COL.test(currentIndex)) {
                 int moveIndex = currentIndex - 15;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
             if (IS_NOT_FIRST_COL.test(currentIndex)) {
                 int moveIndex = currentIndex - 17;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
         }
-        if (!ROW_7.contains(currentIndex)) {
+        if (!ROW_7.contains(currentIndex) && !ROW_8.contains(currentIndex)) {
             if (IS_NOT_LAST_COL.test(currentIndex)) {
                 int moveIndex = currentIndex + 17;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
             if (IS_NOT_FIRST_COL.test(currentIndex)) {
                 int moveIndex = currentIndex + 15;
-                possibleMoves.add(new Pair<>(getScoreForMove(board, moveIndex), new Move(currentIndex, moveIndex)));
+                addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
             }
         }
 
         return possibleMoves;
-    }
-
-    public static boolean canSeeOpponentPiece(int index, boolean isWhite, Board board) {
-
-
-        return
-    }
-
-//    public static boolean canSeeOpponentPiece(int index, boolean isWhite, Board board){
-//        List<Piece> opponentPieces = board.getOpponentPieceLocations(isWhite)
-//                .stream()
-//                .map(opponentIndex -> {
-//                    board.getPieceByIndex(opponentIndex)
-//                            .getPossibleMoves(opponentIndex, board).contains(index);
-//                })
-//                ;
-//
-//        return opponentPieces.forEach(piece -> piece.getPossibleMoves());
-//    }
-
-    //Move to own util or service and make better
-    private static Integer getScoreForMove(Board board, int moveIndex) {
-        Optional<Piece> maybePiece = board.findPieceByIndex(moveIndex);
-        return maybePiece.map(Piece::getScore).orElse(Board.EMPTY_TILE_SCORE);
     }
 }

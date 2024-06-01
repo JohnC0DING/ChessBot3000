@@ -2,6 +2,7 @@ package movement;
 
 import board.Board;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -12,28 +13,22 @@ public class MoveNode {
 
     private final Optional<MoveNode> parent;
 
-    private final Optional<Board> boardSnapshot;
+    private final Board boardSnapshot;
 
-    private Optional<Integer> score = Optional.empty();
+    private Integer score;
 
-    private List<MoveNode> children = Collections.emptyList();
-
-    public MoveNode(Move move, MoveNode parent) {
-        this.move = move;
-        this.parent = Optional.ofNullable(parent);
-        this.boardSnapshot = Optional.empty();
-    }
+    private final List<MoveNode> children = new ArrayList<>();
 
     public MoveNode(Move move, MoveNode parent, Board boardSnapshot) {
         this.move = move;
         this.parent = Optional.ofNullable(parent);
-        this.boardSnapshot = Optional.ofNullable(boardSnapshot);
+        this.boardSnapshot = boardSnapshot;
     }
 
-    public MoveNode(Move move) {
+    public MoveNode(Move move, Board boardSnapshot) {
         this.move = move;
-        this.boardSnapshot = Optional.empty();
         this.parent = Optional.empty();
+        this.boardSnapshot = boardSnapshot;
     }
 
     public boolean hasChildren(){
@@ -56,11 +51,11 @@ public class MoveNode {
         return score;
     }
 
-    public void setScore(Optional<Integer> score) {
+    public void setScore(Integer score) {
         this.score = score;
     }
 
-    public Optional<Board> getBoardSnapshot() {
+    public Board getBoardSnapshot() {
         return boardSnapshot;
     }
 }

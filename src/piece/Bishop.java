@@ -15,17 +15,25 @@ public class Bishop extends Piece {
     }
 
     @Override
-    public List<Pair<Integer, Move>> getPossibleMoves(int index, Board board) {
+    public List<Move> getPossibleMoves(int index, Board board) {
         return PieceMoveUtil.getPossibleMovesForSlidingPiece(index, board, SlidingType.DIAGONAL);
     }
 
     @Override
-    public boolean canSeeOpponentPiece(int opponentIndex, Board board) {
-        return PieceMoveUtil.canSeeOpponentPiece(int opponentIndex, Board board);
+    public boolean canSeeOpponentPiece(int currentIndex, int opponentIndex, Board board) {
+        return PieceMoveUtil.canSeeIndexForSlidingPiece(currentIndex, opponentIndex, board, SlidingType.DIAGONAL);
     }
 
     @Override
     public int getScore() {
-        return 0;
+        return 3;
+    }
+
+    @Override
+    public Pieces getCharacterRepresentation(){
+        if(isWhite()){
+            return Pieces.B;
+        }
+        return Pieces.b;
     }
 }

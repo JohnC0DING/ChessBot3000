@@ -1,56 +1,43 @@
 package player;
 
 import board.Board;
+import fenfilemanagement.MoveWriter;
 import movement.Move;
+import movement.MoveTreeService;
 import util.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Bot {
-
+public class Bot implements Player{
 
     private boolean isWhite;
 
-    public Bot(boolean isWhite) {
+    public Bot(boolean isWhite, MoveTreeService moveTreeService) {
         this.isWhite = isWhite;
+        this.moveTreeService = moveTreeService;
     }
 
-    public Pair<String, Move> makeMove(Board board) {
-        //Construct tree of possible moves
-        //for now create one level of the tree then pick at random
-        //Evaluate moves
-        //Convert to fen
+    private boolean isFirstMove = true;
 
-        Map<Pair<Integer, Integer>, Integer>  movesToScores = new HashMap<>();
+    MoveTreeService moveTreeService;
 
-        boolean isBotMove = true;
-        for(int i = 0; i < 2; i++) {
-            if(isBotMove){
-                for (Integer index : board.getFriendlyPieceLocations(isWhite)) {
-                    board.getPieceByIndex(index)
-                            .ifPresent(piece ->
-                                    movesToScores.putAll(piece.getPossibleMoves(index, board)));
-                }
-            } else {
-                    for (Integer index : board.getOpponentPieceLocations(isWhite)) {
-                        board.getPieceByIndex(index)
-                                .ifPresent(piece ->
-                                        movesToScores.putAll(piece.getPossibleMoves(index, board)));
-                    }
-            }
-            isBotMove = !isBotMove;
+    @Override
+    public Move resolveMove(Board board) {
+        if(isFirstMove){
+            moveTreeService.constructMoveTree(2, isWhite, true, board);
+            isFirstMove = false;
         }
-        //Evaluate scores
 
-
-        String moveSummary = "22>21";
-        board.updateBoard(moveSummary);
-
-        return "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+        return moveTreeService.resolveBestMove(isWhite, true, board);
     }
 
     public boolean isWhite() {
         return isWhite;
+    }
+
+    @Override
+    public boolean isBot() {
+        return true;
     }
 }

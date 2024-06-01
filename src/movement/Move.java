@@ -10,10 +10,10 @@ public class Move {
     /**
      *  Castling is the only time that two moves are required, one for the king's move and one for the rook's move, hence the optional
      */
-    private Optional<Pair<Integer, Integer>> castleMove;
+    private Optional<Pair<Integer, Integer>> castleMove = Optional.empty();
 
-    public Move(Integer left, Integer right) {
-
+    public Move(Integer currentIndex, Integer destinationIndex) {
+        move = new Pair<>(currentIndex, destinationIndex);
     }
 
     public Pair<Integer, Integer> getMove() {

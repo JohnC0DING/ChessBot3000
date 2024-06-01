@@ -31,14 +31,14 @@ public class BoardUtil {
         final int finalOpponentKingLocation = opponentKingLocation;
         if(board.getFriendlyPieceLocations(isBotWhite)
                 .stream()
-                .anyMatch(index -> board.getPieceByIndex(index).canSeeOpponentPiece(finalOpponentKingLocation, board))){
+                .anyMatch(index -> board.getPieceByIndex(index).canSeeOpponentPiece(index, finalOpponentKingLocation, board))){
             score += 10;
         }
 
         final int finalFriendlyKingLocation = friendlyKingLocation;
         if(board.getOpponentPieceLocations(isBotWhite)
                 .stream()
-                .anyMatch(index -> board.getPieceByIndex(index).canSeeOpponentPiece(finalFriendlyKingLocation, board))){
+                .anyMatch(index -> board.getPieceByIndex(index).canSeeOpponentPiece(index, finalFriendlyKingLocation, board))){
             score -= 10;
         }
 

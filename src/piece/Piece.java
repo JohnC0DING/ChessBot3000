@@ -2,10 +2,8 @@ package piece;
 
 import board.Board;
 import movement.Move;
-import util.Pair;
 
 import java.util.List;
-import java.util.Map;
 
 public abstract class Piece {
 
@@ -18,12 +16,16 @@ public abstract class Piece {
         this.isFriendly = isFriendly;
     }
 
-    public abstract List<Pair<Integer, Move>> getPossibleMoves(int index, Board board);
+    public abstract List<Move> getPossibleMoves(int index, Board board);
 
-    public abstract boolean canSeeOpponentPiece(int opponentIndex, Board board);
+    public abstract boolean canSeeOpponentPiece(int currentIndex, int opponentIndex, Board board);
 
     public boolean isFriendly() {
-        return false;
+        return isFriendly;
+    }
+
+    public boolean isOpponent() {
+        return !isFriendly;
     }
 
     public boolean isWhite() {
@@ -31,4 +33,6 @@ public abstract class Piece {
     }
 
     public abstract int getScore();
+
+    public abstract Pieces getCharacterRepresentation();
 }
