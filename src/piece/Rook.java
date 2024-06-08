@@ -7,7 +7,9 @@ import util.Pair;
 
 import java.util.*;
 
-public class Rook extends Piece {
+public class Rook extends Piece implements Castleable {
+
+    boolean hasMoved = false;
 
     public Rook(boolean isWhite, boolean isFriendly) {
         super(isWhite, isFriendly);
@@ -34,5 +36,15 @@ public class Rook extends Piece {
             return Pieces.R;
         }
         return Pieces.r;
+    }
+
+    @Override
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+    @Override
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 }

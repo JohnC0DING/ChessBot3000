@@ -24,7 +24,7 @@ public abstract class Piece {
         return isFriendly;
     }
 
-    public boolean isOpponent() {
+    public boolean isOpponent(boolean isWhite) {
         return !isFriendly;
     }
 

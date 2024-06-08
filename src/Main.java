@@ -1,7 +1,7 @@
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
-        Game game = new Game(true, true);
+        Game game = new Game(true, true, 20);
         game.runGame();
     }
 

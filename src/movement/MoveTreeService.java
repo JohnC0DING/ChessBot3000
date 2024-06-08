@@ -4,13 +4,17 @@ import board.Board;
 import board.BoardUtil;
 
 import java.util.*;
-import java.util.stream.IntStream;
+import java.util.stream.DoubleStream;
 
 public class MoveTreeService {
 
-    MoveTree moveTree;
+    private MoveTree moveTree = new MoveTree();
 
-    private static final int SEARCH_DEPTH_LIMIT = 4;
+    private final int searchDepthLimit;
+
+    public MoveTreeService(int searchDepthLimit) {
+        this.searchDepthLimit = searchDepthLimit;
+    }
 
     public Move resolveBestMove(boolean isBotWhite, boolean isBotToMove, Board board) {
         initialiseScores(moveTree.getNodes(), isBotWhite, isBotToMove);
@@ -24,34 +28,33 @@ public class MoveTreeService {
         if (isBotToMove) {
             move = moveTree.getNodes()
                     .stream()
-                    .max(Comparator.comparingInt(MoveNode::getScore))
+                    .max(Comparator.comparingDouble(MoveNode::getScore))
                     .orElseThrow()
                     .getMove();
         } else {
             move = moveTree.getNodes()
                     .stream()
-                    .min(Comparator.comparingInt(MoveNode::getScore))
+                    .min(Comparator.comparingDouble(MoveNode::getScore))
                     .orElseThrow()
                     .getMove();
         }
         return move;
     }
 
-    private List<Integer> initialiseScores(List<MoveNode> nodes, boolean isBotWhite, boolean isBotToMove) {
-        List<Integer> nodeScores = new ArrayList<>();
-
+    private List<Double> initialiseScores(List<MoveNode> nodes, boolean isBotWhite, boolean isBotToMove) {
+        List<Double> nodeScores = new ArrayList<>();
         for (MoveNode node : nodes) {
             if (!node.hasChildren()) {
                 for (MoveNode childNode : nodes) {
-                    int score = BoardUtil.getScoreForBoardState(childNode.getBoardSnapshot(), isBotWhite);
+                    double score = BoardUtil.getScoreForBoardState(childNode.getBoardSnapshot(), isWhiteToMove(isBotWhite, isBotToMove));
                     childNode.setScore(score);
                     nodeScores.add(score);
                 }
             } else {
-                List<Integer> childScores = initialiseScores(node.getChildren(), isBotWhite, isBotToMove);
+                List<Double> childScores = initialiseScores(node.getChildren(), isBotWhite, isBotToMove);
 
-                IntStream childScoresIntStream = childScores.stream().mapToInt(Integer::intValue);
-                OptionalInt score = isBotToMove ? childScoresIntStream.max() : childScoresIntStream.min();
+                DoubleStream childScoresDoubleStream = childScores.stream().mapToDouble(Double::doubleValue);
+                OptionalDouble score = isBotToMove ? childScoresDoubleStream.max() : childScoresDoubleStream.min();
 
                 node.setScore(score.orElseThrow());
                 nodeScores.add(score.orElseThrow());
@@ -61,24 +64,19 @@ public class MoveTreeService {
         return nodeScores;
     }
 
-    public MoveTree constructMoveTree(int searchDepth, boolean isWhiteToMove, boolean isBotToMove, Board board) {
+    private boolean isWhiteToMove(boolean isBotWhite, boolean isBotToMove) {
+        return isBotWhite == isBotToMove;
+    }
+
+    public void constructMoveTree(boolean isWhiteToMove, boolean isFriendlyToMove, Board board) {
         moveTree = new MoveTree();
-
-        List<MoveNode> moveNodes = new ArrayList<>();
-
-        if (moveTree.getNodes().isEmpty()) {
-            initialiseMoveTree(isWhiteToMove, isBotToMove, board);
-            moveNodes = moveTree.getNodes();
-        }
-
-        createMoveLayers(searchDepth, !isWhiteToMove, !isBotToMove, board, moveNodes);
-
-        return moveTree;
+        initialiseMoveTree(isWhiteToMove, board);
+        createMoveLayers(0, !isWhiteToMove, !isFriendlyToMove, board, moveTree.getNodes());
     }
 
     //TODO We need to do something differently if we are in checkmate
     private int createMoveLayers(int searchDepth, boolean isWhiteToMove, boolean isBotToMove, Board board, List<MoveNode> moveNodes) {
-        if (searchDepth > SEARCH_DEPTH_LIMIT) {
+        if (searchDepth > searchDepthLimit) {
             return --searchDepth;
         }
 
@@ -102,15 +100,9 @@ public class MoveTreeService {
         return searchDepth;
     }
 
-    private void initialiseMoveTree(boolean isWhiteToMove, boolean isBotToMove, Board board) {
-        if (isBotToMove) {
-            for (Integer index : board.getFriendlyPieceLocations(isWhiteToMove)) {
-                createInitialMoveNodesFromPieceLocation(board, index, isWhiteToMove);
-            }
-        } else {
-            for (Integer index : board.getOpponentPieceLocations(isWhiteToMove)) {
-                createInitialMoveNodesFromPieceLocation(board, index, isWhiteToMove);
-            }
+    private void initialiseMoveTree(boolean isWhiteToMove, Board board) {
+        for (Integer index : board.getFriendlyPieceLocations(isWhiteToMove)) {
+            createInitialMoveNodesFromPieceLocation(board, index, isWhiteToMove);
         }
     }
 
@@ -122,5 +114,9 @@ public class MoveTreeService {
                     moveTree.getNodes()
                             .add(new MoveNode(move, boardInstanceForNewMove));
                 });
+    }
+
+    public MoveTree getMoveTree() {
+        return moveTree;
     }
 }

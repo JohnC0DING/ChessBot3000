@@ -6,29 +6,20 @@ import fenfilemanagement.MoveReader;
 import movement.Move;
 import util.Pair;
 
-public class Opponent implements Player{
+public class Opponent implements Player<String> {
 
     private final boolean isWhite;
 
-    private final boolean isBot;
-
     private Bot bot;
 
-    public Opponent(boolean isWhite, boolean isBot) {
+    public Opponent(boolean isWhite) {
         this.isWhite = isWhite;
-        this.isBot = isBot;
     }
 
-    public Move resolveMove(Board board) throws InterruptedException {
-        if(isBot){
-            bot.resolveMove(board);
-        }
+    @Override
+    public String resolveMove(Board board) throws InterruptedException {
+
         return MoveReader.getOpponentMove(isWhite);
-        //to be implemented
-    }
-
-    public boolean isBot() {
-        return isBot;
     }
 
     @Override

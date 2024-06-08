@@ -1,12 +1,15 @@
 package movement;
 
 import board.Board;
+import piece.King;
 import piece.Piece;
+import piece.Rook;
 import piece.SlidingType;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 
 public class PieceMoveUtil {
 
@@ -101,11 +104,12 @@ public class PieceMoveUtil {
         int moveIndex = currentIndex;
         while (isNotEndOfSearch.test(moveIndex)) {
             moveIndex = moveModifier.apply(moveIndex);
+            Piece currentPiece = board.getPieceByIndex(currentIndex);
             Optional<Piece> maybePiece = board.findPieceByIndex(moveIndex);
 
             if (maybePiece.isPresent()) {
                 //Add move if we can take the piece
-                if (maybePiece.get().isOpponent()) {
+                if (maybePiece.get().isWhite() && currentPiece.isWhite()) {
                     possibleMoves.add(new Move(currentIndex, moveIndex));
                 }
                 //Don't look any further down this line as we are blocked by an opponent or friendly piece.
@@ -118,7 +122,7 @@ public class PieceMoveUtil {
         return possibleMoves;
     }
 
-    public static List<Move> getPossibleMovesForKing(int currentIndex, Board board) {
+    public static List<Move> getPossibleMovesForKing(int currentIndex, Board board, King king) {
         List<Move> possibleMoves = new ArrayList<>();
 
         if (IS_NOT_FIRST_COL.test(currentIndex)) {
@@ -154,11 +158,116 @@ public class PieceMoveUtil {
             addMoveIfEmptyOrOpponent(currentIndex, board, moveIndex, possibleMoves);
         }
 
+        addCastlingMoves(currentIndex, board, king, possibleMoves);
+
         return possibleMoves;
     }
 
+
+
+    private static void addCastlingMoves(int currentIndex, Board board, King king, List<Move> possibleMoves) {
+        if (!king.hasMoved()) {
+            if (king.isWhite()) {
+                addCastlingMove(board, currentIndex, 56,
+                        MOVE_MODIFIER_LEFT.andThen(MOVE_MODIFIER_LEFT),
+                        MOVE_MODIFIER_RIGHT, possibleMoves, true);
+                addCastlingMove(board, currentIndex, 63,
+                        MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_RIGHT),
+                        MOVE_MODIFIER_LEFT, possibleMoves, true);
+            } else {
+                addCastlingMove(board, currentIndex, 0,
+                        MOVE_MODIFIER_LEFT.andThen(MOVE_MODIFIER_LEFT),
+                        MOVE_MODIFIER_RIGHT, possibleMoves, false);
+                addCastlingMove(board, currentIndex, 7,
+                        MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_RIGHT),
+                        MOVE_MODIFIER_LEFT, possibleMoves, false);
+            }
+        }
+    }
+
+//
+//    private static void addCastleMoves(int currentIndex, Board board, King king, List<Move> possibleMoves) {
+//        if (!king.hasMoved()) {
+//            if (king.isWhite()) {
+//                int currentIndexForRook = 56;
+//                Optional<Piece> maybePiece = board.findPieceByIndex(currentIndexForRook);
+//                if (maybePiece.isPresent() && maybePiece.get() instanceof Rook && !((Rook) maybePiece.get()).hasMoved()) {
+//                    if (IntStream.range(57, 61)
+//                            .anyMatch(index -> isBlockedByPiece(board, index) ||
+//                                    isMovingThroughCheckOrIsInCheck(board, index))) {
+//                        return;
+//                    }
+//                    int destinationIndexForKing = MOVE_MODIFIER_LEFT.andThen(MOVE_MODIFIER_LEFT).apply(currentIndex);
+//                    int destinationIndexForRook = MOVE_MODIFIER_RIGHT.apply(destinationIndexForKing);
+//                    possibleMoves.add(new Move(currentIndex, destinationIndexForKing, currentIndexForRook, destinationIndexForRook));
+//                }
+//                currentIndexForRook = 63;
+//                maybePiece = board.findPieceByIndex(currentIndexForRook);
+//                if (maybePiece.isPresent() && maybePiece.get() instanceof Rook && !((Rook) maybePiece.get()).hasMoved()) {
+//                    if (IntStream.range(57, 61)
+//                            .anyMatch(index -> isBlockedByPiece(board, index) ||
+//                                    isMovingThroughCheckOrIsInCheck(board, index))) {
+//                        return;
+//                    }
+//                    int destinationIndexForKing = MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_RIGHT).apply(currentIndex);
+//                    int destinationIndexForRook = MOVE_MODIFIER_LEFT.apply(destinationIndexForKing);
+//                    possibleMoves.add(new Move(currentIndex, destinationIndexForKing, currentIndexForRook, destinationIndexForRook));
+//                }
+//            } else {
+//                int currentIndexForRook = 63;
+//                Optional<Piece> maybePiece = board.findPieceByIndex(currentIndexForRook);
+//                if (maybePiece.isPresent() && maybePiece.get() instanceof Rook && !((Rook) maybePiece.get()).hasMoved()) {
+//                    if (IntStream.range(57, 61)
+//                            .anyMatch(index -> isBlockedByPiece(board, index) ||
+//                                    isMovingThroughCheckOrIsInCheck(board, index))) {
+//                        return;
+//                    }
+//                    int destinationIndexForKing = MOVE_MODIFIER_RIGHT.andThen(MOVE_MODIFIER_RIGHT).apply(currentIndex);
+//                    int destinationIndexForRook = MOVE_MODIFIER_LEFT.apply(destinationIndexForKing);
+//                    possibleMoves.add(new Move(currentIndex, destinationIndexForKing, currentIndexForRook, destinationIndexForRook));
+//                }
+//            }
+//        }
+//    }
+
+    private static void addCastlingMove(Board board, int kingIndex, int rookIndex,
+                                        Function<Integer, Integer> kingMoveModifier,
+                                        Function<Integer, Integer> rookMoveModifier,
+                                        List<Move> possibleMoves, boolean isCallerWhite) {
+        Optional<Piece> maybePiece = board.findPieceByIndex(rookIndex);
+        if (maybePiece.isPresent() && maybePiece.get() instanceof Rook &&
+                maybePiece.get().isWhite() == isCallerWhite && !((Rook) maybePiece.get()).hasMoved()) {
+
+            int startOfSpaceBetween = rookMoveModifier.apply(rookIndex);
+            int endOfSpaceBetween = rookMoveModifier.apply(kingIndex);
+            if(startOfSpaceBetween > endOfSpaceBetween){
+                //swap values
+                int temp = startOfSpaceBetween;
+                startOfSpaceBetween = endOfSpaceBetween;
+                endOfSpaceBetween = temp;
+            }
+            if(IntStream.range(startOfSpaceBetween, endOfSpaceBetween)
+                    .anyMatch(index -> isBlockedByPiece(board, index) ||
+                            isMovingThroughCheckOrIsInCheck(board, index, isCallerWhite))){
+                return;
+            }
+
+            int destinationIndexForKing = kingMoveModifier.andThen(kingMoveModifier).apply(kingIndex);
+            int destinationIndexForRook = rookMoveModifier.apply(destinationIndexForKing);
+            possibleMoves.add(new Move(kingIndex, destinationIndexForKing, rookIndex, destinationIndexForRook));
+        }
+    }
+
+    private static boolean isBlockedByPiece(Board board, int index) {
+        return board.findPieceByIndex(index).isPresent();
+    }
+
+    private static boolean isMovingThroughCheckOrIsInCheck(Board board, int index, boolean isCallerWhite) {
+        return board.getOpponentPieceLocations(isCallerWhite).stream()
+                .anyMatch(opponentIndex -> board.getPieceByIndex(opponentIndex).canSeeOpponentPiece(opponentIndex, index, board));
+    }
+
     public static boolean canSeeIndexForKing(int currentIndex, int indexToFind, Board board) {
-        List<Move> possibleMoves = new ArrayList<>();
 
         if (IS_NOT_FIRST_COL.test(currentIndex)) {
             int moveIndex = MOVE_MODIFIER_LEFT.apply(currentIndex);
@@ -237,7 +346,7 @@ public class PieceMoveUtil {
             possibleMoves.add(new Move(currentIndex, forwardMove));
         }
 
-        //Starting tile double move
+        //Starting square double move
         if (startingRow.contains(currentIndex)) {
             int doubleForwardMove = moveModifierForward.apply(forwardMove);
             if (board.findPieceByIndex(doubleForwardMove).isEmpty()) {
@@ -261,7 +370,7 @@ public class PieceMoveUtil {
     // Then remove the node from the tree if we are moving into check. Although this may be bad if we are working from the bottom up. As we may be checking all
     // the nodes below first. Something to look into.
     private static void addMoveIfEmptyOrOpponent(int currentIndex, Board board, int moveIndex, List<Move> possibleMoves) {
-        if (board.findPieceByIndex(moveIndex).isPresent() && board.findPieceByIndex(moveIndex).get().isOpponent()) {
+        if (board.findPieceByIndex(moveIndex).isPresent() && (board.findPieceByIndex(moveIndex).get().isWhite() != board.getPieceByIndex(currentIndex).isWhite())) {
             possibleMoves.add(new Move(currentIndex, moveIndex));
         }
     }
@@ -406,5 +515,15 @@ public class PieceMoveUtil {
         }
 
         return possibleMoves;
+    }
+
+    public static boolean isPawnQueenable(int newIndex, Piece piece) {
+        List<Integer> endRow;
+        if (piece.isWhite()) {
+            endRow = ROW_1;
+        } else {
+            endRow = ROW_8;
+        }
+        return endRow.contains(newIndex);
     }
 }

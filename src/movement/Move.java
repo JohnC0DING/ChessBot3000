@@ -16,6 +16,11 @@ public class Move {
         move = new Pair<>(currentIndex, destinationIndex);
     }
 
+    public Move(Integer currentIndexForKing, Integer destinationIndexForKing, Integer currentIndexForRook, Integer destinationIndexForRook ) {
+        move = new Pair<>(currentIndexForKing, destinationIndexForKing);
+        castleMove = Optional.of(new Pair<>(currentIndexForRook, destinationIndexForRook));
+    }
+
     public Pair<Integer, Integer> getMove() {
         return move;
     }

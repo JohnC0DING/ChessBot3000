@@ -3,11 +3,9 @@ package player;
 import board.Board;
 import movement.Move;
 
-public interface Player {
+public interface Player<T> {
 
-    Move resolveMove(Board board) throws InterruptedException;
-
-    boolean isBot();
+    T resolveMove(Board board) throws InterruptedException;
 
     boolean isWhite();
 }

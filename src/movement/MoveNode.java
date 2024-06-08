@@ -15,7 +15,7 @@ public class MoveNode {
 
     private final Board boardSnapshot;
 
-    private Integer score;
+    private Double score;
 
     private final List<MoveNode> children = new ArrayList<>();
 
@@ -47,11 +47,11 @@ public class MoveNode {
         return move;
     }
 
-    public Integer getScore() {
+    public Double getScore() {
         return score;
     }
 
-    public void setScore(Integer score) {
+    public void setScore(Double score) {
         this.score = score;
     }
 

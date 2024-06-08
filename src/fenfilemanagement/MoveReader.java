@@ -1,5 +1,7 @@
 package fenfilemanagement;
 
+import movement.Move;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;

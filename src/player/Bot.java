@@ -11,10 +11,13 @@ import java.util.Map;
 
 public class Bot implements Player{
 
-    private boolean isWhite;
+    private final boolean isWhite;
 
-    public Bot(boolean isWhite, MoveTreeService moveTreeService) {
+    private final boolean isFriendly;
+
+    public Bot(boolean isWhite, boolean isFriendly, MoveTreeService moveTreeService) {
         this.isWhite = isWhite;
+        this.isFriendly = isFriendly;
         this.moveTreeService = moveTreeService;
     }
 
@@ -22,22 +25,16 @@ public class Bot implements Player{
 
     MoveTreeService moveTreeService;
 
-    @Override
     public Move resolveMove(Board board) {
         if(isFirstMove){
-            moveTreeService.constructMoveTree(2, isWhite, true, board);
             isFirstMove = false;
         }
+        moveTreeService.constructMoveTree(isWhite, isFriendly, board);
 
-        return moveTreeService.resolveBestMove(isWhite, true, board);
+        return moveTreeService.resolveBestMove(isWhite, isFriendly, board);
     }
 
     public boolean isWhite() {
         return isWhite;
-    }
-
-    @Override
-    public boolean isBot() {
-        return true;
     }
 }
